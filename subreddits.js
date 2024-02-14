@@ -1,9 +1,10 @@
+const { MongoClient, ObjectID } = require('mongodb');
 const router = require('express').Router();
-const connect = require('./db');
+const { start } = require('./db');
 
 
 router.post('/posts', async (req, res) => {
-  const db = await connect();
+  const db = await start();
   const { name, description } = req.body;
 
   try {
@@ -15,11 +16,31 @@ router.post('/posts', async (req, res) => {
 });
 
 
-router.get('/posts', async (req, res) => {
-  const db = await connect();
+router.post('/subreddits/:id/posts', async (req, res) => {
+  const db = await start();
+  const { id } = req.params;
+  const { title, content } = req.body;
 
   try {
-    const result = await db.collection('posts').find().toArray();
+    const subreddit = await db.collection('subreddits').findOne({ _id: new ObjectID(id) });
+    if (!subreddit) {
+      return res.status(404).json({ error: 'Subreddit not found' });
+    }
+
+    const result = await db.collection('posts').insertOne({ title, content, subredditId: id });
+    res.status(201).json(result.ops[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+router.get('/subreddits/:id/posts', async (req, res) => {
+  const db = await start();
+  const { id } = req.params;
+
+  try {
+    const result = await db.collection('posts').find({ subredditId: id }).toArray();
     res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -27,12 +48,17 @@ router.get('/posts', async (req, res) => {
 });
 
 
-router.get('/:id', async (req, res) => {
-  const db = await connect();
+router.get('/posts/:id/comments', async (req, res) => {
+  const db = await start();
   const { id } = req.params;
 
   try {
-    const result = await db.collection('subreddits').findOne({ _id: new MongoClient.ObjectID(id) });
+    const post = await db.collection('posts').findOne({ _id: new ObjectID(id) });
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const result = await db.collection('comments').find({ postId: id }).toArray();
     res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -40,34 +66,27 @@ router.get('/:id', async (req, res) => {
 });
 
 
-router.put('/:id', async (req, res) => {
-  const db = await connect();
-  const { id } = req.params;
-  const { name, description } = req.body;
-
+router.put('/posts/:id', async (req, res) => {
   try {
-    const result = await db.collection('subreddits').updateOne(
-      { id: new MongoClient.ObjectID(id) },
-      { $set: { name, description } }
+    const db = await start();
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    const post = await db.collection('posts').findOne({ _id: new ObjectID(id) });
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const result = await db.collection('posts').updateOne(
+      { _id: new ObjectID(id) },
+      { $set: { title, content } }
     );
+
     res.status(200).json(result.modifiedCount);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
-
-router.delete('/:id', async (req, res) => {
-  const db = await connect();
-  const { id } = req.params;
-
-  try {
-    const result = await db.collection('subreddits').deleteOne({ _id: new MongoClient.ObjectID(id) });
-    res.status(200).json(result.deletedCount);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 
 module.exports = router;
