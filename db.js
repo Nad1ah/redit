@@ -12,9 +12,9 @@ async function start() {
   const connection = await client.connect()
   db = connection.db("EditDataBase")
 
-  await db.createCollection('subreddits');
-  await db.createCollection('posts');
-  await db.createCollection('comments');
+  // await db.createCollection('subreddits');
+  // await db.createCollection('posts');
+  // await db.createCollection('comments');
   
   return  db;
 }

@@ -4,9 +4,6 @@ const express = require("express");
 const app = express();
 const subredditsRouter = require("./subreddits")
 
-
-
-
 app.use(express.json());
 app.use(subredditsRouter);
 
