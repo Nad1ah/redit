@@ -1,24 +1,24 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient } = require('mongodb')
 
-let db;
+let db
 
 async function start() {
   if (db) {
-    return db;
+    return db
   }
 
-  const uri = process.env.DB_URL;
-  const client = new MongoClient(uri);
-  const connection = await client.connect();
-  db = connection.db("EditDataBase");
+  const uri = process.env.DB_URL
+  const client = new MongoClient(uri)
+  const connection = await client.connect()
+  db = connection.db('EditDataBase')
 
   // await db.createCollection('subreddits');
   // await db.createCollection('posts');
   // await db.createCollection('comments');
 
-  return db;
+  return db
 }
 
 module.exports = {
   start,
-};
+}
