@@ -1,6 +1,7 @@
-const { MongoClient, ObjectID } = require("mongodb");
+const bcrypt = require("bcrypt");
 const router = require("express").Router();
 const { start } = require("./db");
+const Joi = require("joi");
 
 router.post("/posts", async (req, res) => {
   const db = await start();
